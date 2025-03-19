@@ -2,48 +2,44 @@ import { useEffect, useState } from "react";
 import { StyleSheet, Text, View, FlatList, TextInput, Button } from "react-native";
 
 export default function App() {
-    const [animals, setAnimals] = useState([]);
-    const [newAnimal, setNewAnimal] = useState({
+    const defaultNewAnimal = {
         animalName: "",
         age: "",
         habitatId: "",
         speciesId: "",
-    });
+    }
+    const [animals, setAnimals] = useState([]);
+    const [newAnimal, setNewAnimal] = useState(defaultNewAnimal);
+
+    async function fetchAnimals () {
+        const response = await fetch("http://localhost:3000/get-animals")
+        const data = await response.json();
+        setAnimals(data);
+        return data;
+    }
 
     useEffect(() => {
-        fetch("http://localhost:3000/get-animals")
-            .then((response) => response.json())
-            .then((data) => {
-                setAnimals(data);
-            })
-            .catch((error) => {
-                console.error("Error fetching data:", error);
-            });
+        fetchAnimals()
     }, []);
 
-    const handleAddAnimal = () => {
-        fetch("http://localhost:3000/add-animal", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(newAnimal),
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    setAnimals([...animals, { ...newAnimal, AnimalID: data.animalId }]);
-                    setNewAnimal({
-                        animalName: "",
-                        age: "",
-                        habitatId: "",
-                        speciesId: "",
-                    });
-                }
-            })
-            .catch((error) => {
-                console.error("Error adding animal:", error);
+    const handleAddAnimal = async () => {
+        try {
+            const response = await fetch("http://localhost:3000/add-animal", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newAnimal),
             });
+            const data = await response.json();
+            if (data.success) {
+                const updatedAnimals = await fetchAnimals();
+                setAnimals(updatedAnimals);
+                setNewAnimal(defaultNewAnimal);
+            }
+        } catch (error) {
+            console.error("Error adding animal:", error);
+        }
     }
 
 
@@ -61,7 +57,7 @@ export default function App() {
                         <Text>Climate: {item.Climate}</Text>
                         <Text>Species: {item.SpeciesName}</Text>
                         <Text>Scientific Name: {item.ScientificName}</Text>
-                        <Text></Text>
+                        <Text> </Text>
                     </View>
                 )}
             />
@@ -87,7 +83,7 @@ export default function App() {
                 value={newAnimal.speciesId}
                 onChangeText={(text) => setNewAnimal({ ...newAnimal, speciesId: text })}
             />
-            <Button onClick={handleAddAnimal} title="Add Animal"/>
+            <Button onPress={handleAddAnimal} title="Add Animal"/>
         </View>
         </>
     );
