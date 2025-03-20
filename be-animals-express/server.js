@@ -53,10 +53,39 @@ app.post("/add-animal", (req, res) => {
     };
     connection.query(
         `INSERT INTO animals (AnimalName, age, HabitatID, SpeciesID) VALUES (?, ?, ?, ?)`,
-        [newAnimal.AnimalName, newAnimal.age, newAnimal.HabitatID, newAnimal.SpeciesID],
+        [
+            newAnimal.AnimalName,
+            newAnimal.age,
+            newAnimal.HabitatID,
+            newAnimal.SpeciesID,
+        ],
         (err, result) => {
             if (err) throw err;
             res.json({ success: true, animalId: result.insertId });
+        }
+    );
+});
+
+app.put("/put-animal", (req, res) => {
+    const animal = {
+        AnimalID: req.body.animalId,
+        AnimalName: req.body.animalName,
+        age: req.body.age,
+        HabitatID: req.body.habitatId,
+        SpeciesID: req.body.speciesId,
+    };
+    connection.query(
+        `UPDATE animals SET AnimalName = ?, age = ?, HabitatID = ?, SpeciesID = ? WHERE AnimalID = ?`,
+        [
+            animal.AnimalName,
+            animal.age,
+            animal.HabitatID,
+            animal.SpeciesID,
+            animal.AnimalID,
+        ],
+        (err, result) => {
+            if (err) throw err;
+            res.json({ success: true });
         }
     );
 });

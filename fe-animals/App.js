@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View, FlatList, TextInput, Button } from "react-native";
 
+
 export default function App() {
     const defaultNewAnimal = {
         animalName: "",
@@ -10,6 +11,9 @@ export default function App() {
     }
     const [animals, setAnimals] = useState([]);
     const [newAnimal, setNewAnimal] = useState(defaultNewAnimal);
+    const [animalId, setAnimalId]= useState(null);
+    const [edittedAnimal, setEdittedAnimal] = useState({});
+    const [showEditForm, setShowEditForm] = useState(false);
 
     async function fetchAnimals () {
         const response = await fetch("http://localhost:3000/get-animals")
@@ -42,6 +46,47 @@ export default function App() {
         }
     }
 
+    const getAnimalById = (insertedId) => {
+        const foundAnimal = animals.find((animal) => animal.AnimalID === insertedId);
+        if (foundAnimal) {
+        setEdittedAnimal(foundAnimal);
+        } else {
+        console.error("Animal not found", insertedId);
+        }
+    }
+    const handleEditAnimal = async () => {
+        console.log("Editing animal:", edittedAnimal);
+        const animalToUpdate = {
+            animalId: edittedAnimal.AnimalID,
+            animalName: edittedAnimal.animalName,
+            age: edittedAnimal.age,
+            habitatId: edittedAnimal.habitatId,
+            speciesId: edittedAnimal.speciesId,
+        };
+        try {
+            const response = await fetch(`http://localhost:3000/put-animal`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(animalToUpdate),
+            });
+            const data = await response.json();
+            if (data.success) {
+                const updatedAnimals = await fetchAnimals();
+                setAnimals(updatedAnimals);
+                setShowEditForm(false);
+            }
+        }
+        catch (error) {
+            console.error("Error editing animal:", error);
+        }
+    }
+
+const openEditForm = (itemId) => {
+    getAnimalById(itemId);
+    setShowEditForm(true);
+}
 
     return (
         <>
@@ -57,12 +102,14 @@ export default function App() {
                         <Text>Climate: {item.Climate}</Text>
                         <Text>Species: {item.SpeciesName}</Text>
                         <Text>Scientific Name: {item.ScientificName}</Text>
+                        <Button onPress={() => openEditForm(item.AnimalID)} title="Edit"/>
                         <Text> </Text>
                     </View>
                 )}
             />
         </View>
         <View className="animals-form">
+            <h1>Add Animal</h1>
             <TextInput 
                 placeholder="Animal Name"
                 value={newAnimal.animalName}
@@ -85,6 +132,33 @@ export default function App() {
             />
             <Button onPress={handleAddAnimal} title="Add Animal"/>
         </View>
+        
+        {showEditForm &&       
+        <View className="animals-edit-form">
+            <h1>Edit Animal</h1>
+            <TextInput 
+                placeholder="Animal Name"
+                value={edittedAnimal.animalName}
+                onChangeText={(text) => setEdittedAnimal({ ...edittedAnimal, animalName: text })}
+            />
+            <TextInput 
+                placeholder="Age"
+                value={edittedAnimal.age}
+                onChangeText={(text) => setEdittedAnimal({  ...edittedAnimal, age: text })}
+            />
+            <TextInput 
+                placeholder="Habitat ID"
+                value={edittedAnimal.habitatId}
+                onChangeText={(text) => setEdittedAnimal({  ...edittedAnimal, habitatId: text })}
+            />
+            <TextInput 
+                placeholder="Species ID"
+                value={edittedAnimal.speciesId}
+                onChangeText={(text) => setEdittedAnimal({  ...edittedAnimal, speciesId: text })}
+            />
+            <Button onPress={handleEditAnimal} title="Edit Animal"/>
+        </View>
+        }
         </>
     );
 }
