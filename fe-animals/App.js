@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View, FlatList, TextInput, Button } from "react-native";
-
+import {
+    StyleSheet,
+    Text,
+    View,
+    FlatList,
+    TextInput,
+    Button,
+} from "react-native";
 
 export default function App() {
     const defaultNewAnimal = {
@@ -8,22 +14,21 @@ export default function App() {
         age: "",
         habitatId: "",
         speciesId: "",
-    }
+    };
     const [animals, setAnimals] = useState([]);
     const [newAnimal, setNewAnimal] = useState(defaultNewAnimal);
-    const [animalId, setAnimalId]= useState(null);
     const [edittedAnimal, setEdittedAnimal] = useState({});
     const [showEditForm, setShowEditForm] = useState(false);
 
-    async function fetchAnimals () {
-        const response = await fetch("http://localhost:3000/get-animals")
+    async function fetchAnimals() {
+        const response = await fetch("http://localhost:3000/get-animals");
         const data = await response.json();
         setAnimals(data);
         return data;
     }
 
     useEffect(() => {
-        fetchAnimals()
+        fetchAnimals();
     }, []);
 
     const handleAddAnimal = async () => {
@@ -44,16 +49,18 @@ export default function App() {
         } catch (error) {
             console.error("Error adding animal:", error);
         }
-    }
+    };
 
     const getAnimalById = (insertedId) => {
-        const foundAnimal = animals.find((animal) => animal.AnimalID === insertedId);
+        const foundAnimal = animals.find(
+            (animal) => animal.AnimalID === insertedId
+        );
         if (foundAnimal) {
-        setEdittedAnimal(foundAnimal);
+            setEdittedAnimal(foundAnimal);
         } else {
-        console.error("Animal not found", insertedId);
+            console.error("Animal not found", insertedId);
         }
-    }
+    };
     const handleEditAnimal = async () => {
         console.log("Editing animal:", edittedAnimal);
         const animalToUpdate = {
@@ -77,88 +84,137 @@ export default function App() {
                 setAnimals(updatedAnimals);
                 setShowEditForm(false);
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.error("Error editing animal:", error);
         }
-    }
+    };
 
-const openEditForm = (itemId) => {
-    getAnimalById(itemId);
-    setShowEditForm(true);
-}
+    const handleDeleteAnimal = async (animalId) => {
+        try {
+            const response = await fetch(`http://localhost:3000/delete-animal/${animalId}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            if (response.ok) {
+                // Successfully deleted
+                const updatedAnimals = await fetchAnimals();
+                setAnimals(updatedAnimals);
+            } else {
+                // Handle error response
+                console.error("Failed to delete animal:", response.status);
+            }
+        } catch (error) {
+            console.error("Error deleting animal:", error);
+        }
+    };
+
+    const openEditForm = (itemId) => {
+        getAnimalById(itemId);
+        setShowEditForm(true);
+    };
 
     return (
         <>
-        <View style={styles.container}>
-            <FlatList
-                data={animals}
-                keyExtractor={(item) => item.AnimalID.toString()}
-                renderItem={({ item }) => (
-                    <View>
-                        <Text>Name: {item.AnimalName}</Text>
-                        <Text>Age: {item.age}</Text>
-                        <Text>Habitat: {item.HabitatName}</Text>
-                        <Text>Climate: {item.Climate}</Text>
-                        <Text>Species: {item.SpeciesName}</Text>
-                        <Text>Scientific Name: {item.ScientificName}</Text>
-                        <Button onPress={() => openEditForm(item.AnimalID)} title="Edit"/>
-                        <Text> </Text>
-                    </View>
-                )}
-            />
-        </View>
-        <View className="animals-form">
-            <h1>Add Animal</h1>
-            <TextInput 
-                placeholder="Animal Name"
-                value={newAnimal.animalName}
-                onChangeText={(text) => setNewAnimal({ ...newAnimal, animalName: text })}
-            />
-            <TextInput 
-                placeholder="Age"
-                value={newAnimal.age}
-                onChangeText={(text) => setNewAnimal({ ...newAnimal, age: text })}
-            />
-            <TextInput 
-                placeholder="Habitat ID"
-                value={newAnimal.habitatId}
-                onChangeText={(text) => setNewAnimal({ ...newAnimal, habitatId: text })}
-            />
-            <TextInput 
-                placeholder="Species ID"
-                value={newAnimal.speciesId}
-                onChangeText={(text) => setNewAnimal({ ...newAnimal, speciesId: text })}
-            />
-            <Button onPress={handleAddAnimal} title="Add Animal"/>
-        </View>
-        
-        {showEditForm &&       
-        <View className="animals-edit-form">
-            <h1>Edit Animal</h1>
-            <TextInput 
-                placeholder="Animal Name"
-                value={edittedAnimal.animalName}
-                onChangeText={(text) => setEdittedAnimal({ ...edittedAnimal, animalName: text })}
-            />
-            <TextInput 
-                placeholder="Age"
-                value={edittedAnimal.age}
-                onChangeText={(text) => setEdittedAnimal({  ...edittedAnimal, age: text })}
-            />
-            <TextInput 
-                placeholder="Habitat ID"
-                value={edittedAnimal.habitatId}
-                onChangeText={(text) => setEdittedAnimal({  ...edittedAnimal, habitatId: text })}
-            />
-            <TextInput 
-                placeholder="Species ID"
-                value={edittedAnimal.speciesId}
-                onChangeText={(text) => setEdittedAnimal({  ...edittedAnimal, speciesId: text })}
-            />
-            <Button onPress={handleEditAnimal} title="Edit Animal"/>
-        </View>
-        }
+            <View style={styles.container}>
+                <FlatList
+                    data={animals}
+                    keyExtractor={(item) => item.AnimalID.toString()}
+                    renderItem={({ item }) => (
+                        <View>
+                            <Text>Name: {item.AnimalName}</Text>
+                            <Text>Age: {item.age}</Text>
+                            <Text>Habitat: {item.HabitatName}</Text>
+                            <Text>Climate: {item.Climate}</Text>
+                            <Text>Species: {item.SpeciesName}</Text>
+                            <Text>Scientific Name: {item.ScientificName}</Text>
+                            <Button
+                                onPress={() => openEditForm(item.AnimalID)}
+                                title="Edit"
+                            />
+                            <Button onPress={() => handleDeleteAnimal(item.AnimalID)} title="Delete" color="red" />
+                            <Text> </Text>
+                        </View>
+                    )}
+                />
+            </View>
+            <View className="animals-form">
+                <h1>Add Animal</h1>
+                <TextInput
+                    placeholder="Animal Name"
+                    value={newAnimal.animalName}
+                    onChangeText={(text) =>
+                        setNewAnimal({ ...newAnimal, animalName: text })
+                    }
+                />
+                <TextInput
+                    placeholder="Age"
+                    value={newAnimal.age}
+                    onChangeText={(text) =>
+                        setNewAnimal({ ...newAnimal, age: text })
+                    }
+                />
+                <TextInput
+                    placeholder="Habitat ID"
+                    value={newAnimal.habitatId}
+                    onChangeText={(text) =>
+                        setNewAnimal({ ...newAnimal, habitatId: text })
+                    }
+                />
+                <TextInput
+                    placeholder="Species ID"
+                    value={newAnimal.speciesId}
+                    onChangeText={(text) =>
+                        setNewAnimal({ ...newAnimal, speciesId: text })
+                    }
+                />
+                <Button onPress={handleAddAnimal} title="Add Animal" />
+            </View>
+
+            {showEditForm && (
+                <View className="animals-edit-form">
+                    <h1>Edit Animal</h1>
+                    <TextInput
+                        placeholder="Animal Name"
+                        value={edittedAnimal.animalName}
+                        onChangeText={(text) =>
+                            setEdittedAnimal({
+                                ...edittedAnimal,
+                                animalName: text,
+                            })
+                        }
+                    />
+                    <TextInput
+                        placeholder="Age"
+                        value={edittedAnimal.age}
+                        onChangeText={(text) =>
+                            setEdittedAnimal({ ...edittedAnimal, age: text })
+                        }
+                    />
+                    <TextInput
+                        placeholder="Habitat ID"
+                        value={edittedAnimal.habitatId}
+                        onChangeText={(text) =>
+                            setEdittedAnimal({
+                                ...edittedAnimal,
+                                habitatId: text,
+                            })
+                        }
+                    />
+                    <TextInput
+                        placeholder="Species ID"
+                        value={edittedAnimal.speciesId}
+                        onChangeText={(text) =>
+                            setEdittedAnimal({
+                                ...edittedAnimal,
+                                speciesId: text,
+                            })
+                        }
+                    />
+                    <Button onPress={handleEditAnimal} title="Edit Animal" />
+                </View>
+            )}
         </>
     );
 }

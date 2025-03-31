@@ -90,6 +90,18 @@ app.put("/put-animal", (req, res) => {
     );
 });
 
+app.delete("/delete-animal/:id", (req, res) =>{
+    const animalId = req.params.id;
+    connection.query(
+        `DELETE FROM animals WHERE AnimalID = ?`, 
+        [animalId], 
+        (err, result) => {
+            if (err) throw err;
+            res.json({ success: true});
+        }
+    )    
+})
+
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
