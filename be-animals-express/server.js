@@ -66,7 +66,8 @@ app.post("/add-animal", (req, res) => {
     );
 });
 
-app.put("/put-animal", (req, res) => {
+app.put("/put-animal/:id", (req, res) => {
+    const animalId = req.params.id;
     const animal = {
         AnimalID: req.body.animalId,
         AnimalName: req.body.animalName,
@@ -81,7 +82,7 @@ app.put("/put-animal", (req, res) => {
             animal.age,
             animal.HabitatID,
             animal.SpeciesID,
-            animal.AnimalID,
+            animalId,
         ],
         (err, result) => {
             if (err) throw err;

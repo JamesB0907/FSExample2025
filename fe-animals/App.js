@@ -19,6 +19,7 @@ export default function App() {
     const [newAnimal, setNewAnimal] = useState(defaultNewAnimal);
     const [edittedAnimal, setEdittedAnimal] = useState({});
     const [showEditForm, setShowEditForm] = useState(false);
+    const [animalId, setAnimalId] = useState(0);
 
     async function fetchAnimals() {
         const response = await fetch("http://localhost:3000/get-animals");
@@ -51,18 +52,7 @@ export default function App() {
         }
     };
 
-    const getAnimalById = (insertedId) => {
-        const foundAnimal = animals.find(
-            (animal) => animal.AnimalID === insertedId
-        );
-        if (foundAnimal) {
-            setEdittedAnimal(foundAnimal);
-        } else {
-            console.error("Animal not found", insertedId);
-        }
-    };
-    const handleEditAnimal = async () => {
-        console.log("Editing animal:", edittedAnimal);
+    const handleEditAnimal = async (animalId) => {
         const animalToUpdate = {
             animalId: edittedAnimal.AnimalID,
             animalName: edittedAnimal.animalName,
@@ -71,13 +61,16 @@ export default function App() {
             speciesId: edittedAnimal.speciesId,
         };
         try {
-            const response = await fetch(`http://localhost:3000/put-animal`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(animalToUpdate),
-            });
+            const response = await fetch(
+                `http://localhost:3000/put-animal/${animalId}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(animalToUpdate),
+                }
+            );
             const data = await response.json();
             if (data.success) {
                 const updatedAnimals = await fetchAnimals();
@@ -91,12 +84,15 @@ export default function App() {
 
     const handleDeleteAnimal = async (animalId) => {
         try {
-            const response = await fetch(`http://localhost:3000/delete-animal/${animalId}`, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
+            const response = await fetch(
+                `http://localhost:3000/delete-animal/${animalId}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
             if (response.ok) {
                 // Successfully deleted
                 const updatedAnimals = await fetchAnimals();
@@ -111,8 +107,18 @@ export default function App() {
     };
 
     const openEditForm = (itemId) => {
-        getAnimalById(itemId);
-        setShowEditForm(true);
+        setAnimalId(itemId);
+        const foundAnimal = animals.find((animal) => animal.AnimalID === itemId);
+        if (foundAnimal) {
+            setShowEditForm(true);
+            setEdittedAnimal({
+                ...foundAnimal,
+                animalName: foundAnimal.AnimalName,
+                age: foundAnimal.age.toString(), // Ensure age is a string
+                habitatId: foundAnimal.HabitatID.toString(), // Ensure habitatId is a string
+                speciesId: foundAnimal.SpeciesID.toString(), // Ensure speciesId is a string
+            });
+        }
     };
 
     return (
@@ -132,13 +138,21 @@ export default function App() {
                             <Button
                                 onPress={() => openEditForm(item.AnimalID)}
                                 title="Edit"
+                                color="blue"
                             />
-                            <Button onPress={() => handleDeleteAnimal(item.AnimalID)} title="Delete" color="red" />
+                            <Button
+                                onPress={() =>
+                                    handleDeleteAnimal(item.AnimalID)
+                                }
+                                title="Delete"
+                                color="red"
+                            />
                             <Text> </Text>
                         </View>
                     )}
                 />
             </View>
+            {/* ADD ANIMAL FORM */}
             <View className="animals-form">
                 <h1>Add Animal</h1>
                 <TextInput
@@ -172,10 +186,12 @@ export default function App() {
                 <Button onPress={handleAddAnimal} title="Add Animal" />
             </View>
 
+            {/* EDIT ANIMAL FORM */}
             {showEditForm && (
                 <View className="animals-edit-form">
                     <h1>Edit Animal</h1>
                     <TextInput
+                        controlled
                         placeholder="Animal Name"
                         value={edittedAnimal.animalName}
                         onChangeText={(text) =>
@@ -186,13 +202,18 @@ export default function App() {
                         }
                     />
                     <TextInput
+                        controlled
                         placeholder="Age"
                         value={edittedAnimal.age}
                         onChangeText={(text) =>
-                            setEdittedAnimal({ ...edittedAnimal, age: text })
+                            setEdittedAnimal({ 
+                                ...edittedAnimal, 
+                                age: text 
+                            })
                         }
                     />
                     <TextInput
+                        controlled
                         placeholder="Habitat ID"
                         value={edittedAnimal.habitatId}
                         onChangeText={(text) =>
@@ -203,6 +224,7 @@ export default function App() {
                         }
                     />
                     <TextInput
+                        controlled
                         placeholder="Species ID"
                         value={edittedAnimal.speciesId}
                         onChangeText={(text) =>
@@ -212,7 +234,7 @@ export default function App() {
                             })
                         }
                     />
-                    <Button onPress={handleEditAnimal} title="Edit Animal" />
+                    <Button onPress={() => handleEditAnimal(animalId)} title="Edit Animal" color="green"/>
                 </View>
             )}
         </>
